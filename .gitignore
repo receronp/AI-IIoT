@@ -1,0 +1,8 @@
+# Eclipse CDT project files
+.cproject
+.project
+.settings/
+
+# STM32Cube IDE build files
+Debug/
+Release/
