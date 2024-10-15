@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    sine_data.c
   * @author  AST Embedded Analytics Research Platform
-  * @date    2024-10-15T12:33:31+0200
+  * @date    2024-10-15T17:32:20+0200
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * @attention
@@ -21,13 +21,13 @@
 AI_API_DECLARE_BEGIN
 ai_buffer g_sine_data_map_activations[AI_SINE_DATA_ACTIVATIONS_COUNT] = {
   AI_BUFFER_INIT(AI_FLAG_NONE,  AI_BUFFER_FORMAT_U8,
-    AI_BUFFER_SHAPE_INIT(AI_SHAPE_BCWH, 4, 1, 128, 1, 1),
-    128, NULL, NULL),    /* heap_overlay_pool */
+    AI_BUFFER_SHAPE_INIT(AI_SHAPE_BCWH, 4, 1, 224, 1, 1),
+    224, NULL, NULL),    /* heap_overlay_pool */
   };
 ai_buffer g_sine_data_map_weights[AI_SINE_DATA_WEIGHTS_COUNT] = {
   AI_BUFFER_INIT(AI_FLAG_NONE,  AI_BUFFER_FORMAT_U8,
-    AI_BUFFER_SHAPE_INIT(AI_SHAPE_BCWH, 4, 1, 1284, 1, 1),
-    1284, NULL, s_sine_weights_array_u64),   /* weights_array */
+    AI_BUFFER_SHAPE_INIT(AI_SHAPE_BCWH, 4, 1, 420, 1, 1),
+    420, NULL, s_sine_weights_array_u64),   /* weights_array */
   };
 
 

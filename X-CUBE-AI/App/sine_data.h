@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    sine_data.h
   * @author  AST Embedded Analytics Research Platform
-  * @date    2024-10-15T12:33:31+0200
+  * @date    2024-10-15T17:32:20+0200
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * Copyright (c) 2024 STMicroelectronics.
@@ -32,7 +32,7 @@ AI_DEPRECATED
 AI_API_DECLARE_BEGIN
 
 
-extern const ai_u64 s_sine_weights_array_u64[161];
+extern const ai_u64 s_sine_weights_array_u64[53];
 
 
 

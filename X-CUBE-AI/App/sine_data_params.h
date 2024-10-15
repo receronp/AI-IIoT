@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    sine_data_params.h
   * @author  AST Embedded Analytics Research Platform
-  * @date    2024-10-15T12:33:31+0200
+  * @date    2024-10-15T17:32:20+0200
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * Copyright (c) 2024 STMicroelectronics.
@@ -28,18 +28,18 @@
 
 
 #define AI_SINE_DATA_ACTIVATIONS_SIZES \
-  { 128, }
-#define AI_SINE_DATA_ACTIVATIONS_SIZE     (128)
+  { 224, }
+#define AI_SINE_DATA_ACTIVATIONS_SIZE     (224)
 #define AI_SINE_DATA_ACTIVATIONS_COUNT    (1)
-#define AI_SINE_DATA_ACTIVATION_1_SIZE    (128)
+#define AI_SINE_DATA_ACTIVATION_1_SIZE    (224)
 
 
 
 #define AI_SINE_DATA_WEIGHTS_SIZES \
-  { 1284, }
-#define AI_SINE_DATA_WEIGHTS_SIZE         (1284)
+  { 420, }
+#define AI_SINE_DATA_WEIGHTS_SIZE         (420)
 #define AI_SINE_DATA_WEIGHTS_COUNT        (1)
-#define AI_SINE_DATA_WEIGHT_1_SIZE        (1284)
+#define AI_SINE_DATA_WEIGHT_1_SIZE        (420)
 
 
 

@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    sine.h
   * @author  AST Embedded Analytics Research Platform
-  * @date    2024-10-15T12:33:31+0200
+  * @date    2024-10-15T17:32:20+0200
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * @attention
@@ -23,7 +23,7 @@
 
 /******************************************************************************/
 #define AI_SINE_MODEL_NAME          "sine"
-#define AI_SINE_ORIGIN_MODEL_NAME   "hello_world_float"
+#define AI_SINE_ORIGIN_MODEL_NAME   "sine_model_quantized"
 
 /******************************************************************************/
 #define AI_SINE_ACTIVATIONS_ALIGNMENT   (4)

@@ -58,6 +58,8 @@
 #include "sine_data.h"
 
 /* USER CODE BEGIN includes */
+#include "usart.h"
+#include <math.h>
 /* USER CODE END includes */
 
 /* IO buffers ----------------------------------------------------------------*/
@@ -101,11 +103,16 @@ static ai_buffer* ai_output;
 static void ai_log_err(const ai_error err, const char *fct)
 {
   /* USER CODE BEGIN log */
+  uint8_t MSG[100] = {'\0'};
+
   if (fct)
-    printf("TEMPLATE - Error (%s) - type=0x%02x code=0x%02x\r\n", fct,
-        err.type, err.code);
+    sprintf((char *)MSG, "TEMPLATE - Error (%s) - type=0x%02x code=0x%02x\r\n",
+            fct, err.type, err.code);
   else
-    printf("TEMPLATE - Error - type=0x%02x code=0x%02x\r\n", err.type, err.code);
+    sprintf((char *)MSG, "TEMPLATE - Error - type=0x%02x code=0x%02x\r\n",
+            err.type, err.code);
+
+  HAL_UART_Transmit(&huart1, MSG, sizeof(MSG), 100);
 
   do {} while (1);
   /* USER CODE END log */
@@ -171,25 +178,27 @@ static int ai_run(void)
 /* USER CODE BEGIN 2 */
 int acquire_and_process_data(ai_i8* data[])
 {
-  /* fill the inputs of the c-model
-  for (int idx=0; idx < AI_SINE_IN_NUM; idx++ )
-  {
-      data[idx] = ....
-  }
+  uint8_t MSG[15] = {'\0'};
+  static ai_i8 counter = 0;
+  const ai_float DIVISIONS = 20;
 
-  */
+  // fill the input of the c-model
+  ((ai_float *)(data[0]))[0] = (ai_float)counter++ * (M_PI / DIVISIONS);
+  sprintf((char *)MSG, "X:%.6f,", ((ai_float *)(data[0]))[0]);
+  HAL_UART_Transmit(&huart1, MSG, sizeof(MSG), 100);
+
+  if (counter == (2 * DIVISIONS))
+    counter = 0;
   return 0;
 }
 
 int post_process(ai_i8* data[])
 {
-  /* process the predictions
-  for (int idx=0; idx < AI_SINE_OUT_NUM; idx++ )
-  {
-      data[idx] = ....
-  }
+  // process the predictions
+  uint8_t MSG[15] = {'\0'};
+  sprintf((char *)MSG, "Y:%.6f\r\n", ((ai_float *)(data[0]))[0]);
+  HAL_UART_Transmit(&huart1, MSG, sizeof(MSG), 100);
 
-  */
   return 0;
 }
 /* USER CODE END 2 */
@@ -199,12 +208,18 @@ int post_process(ai_i8* data[])
 void MX_X_CUBE_AI_Init(void)
 {
     /* USER CODE BEGIN 5 */
+    ai_boostrap(data_activations0);
     /* USER CODE END 5 */
 }
 
 void MX_X_CUBE_AI_Process(void)
 {
     /* USER CODE BEGIN 6 */
+    uint8_t res = acquire_and_process_data(data_ins);
+    if (res == 0)
+      res = ai_run();
+    if (res == 0)
+      post_process(data_outs);
     /* USER CODE END 6 */
 }
 #ifdef __cplusplus

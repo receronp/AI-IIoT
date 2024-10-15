@@ -1,7 +1,7 @@
 {
     "_allocate_inputs": 4,
     "_allocate_outputs": 4,
-    "cli_parameters": "generate --target stm32l4 --name sine -m D:/raulc/MUICR/TFM/tflite-micro/tensorflow/lite/micro/examples/hello_world/models/hello_world_float.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/raulc/AppData/Local/Temp/mxAI_workspace39991789834230010864235309774898275 --output C:/Users/raulc/.stm32cubemx/sine_output",
+    "cli_parameters": "generate --target stm32l4 --name sine -m D:/raulc/MUICR/TFM/tensorflow/tensorflow/lite/experimental/micro/examples/hello_world/sine_model_quantized.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/raulc/AppData/Local/Temp/mxAI_workspace41784252798340016528160025174183774 --output C:/Users/raulc/.stm32cubemx/sine_output",
     "cli_version": {
         "extra": "19894",
         "major": 1,
@@ -11,20 +11,19 @@
     "cli_version_str": "1.0.0-19894",
     "code_size": 0,
     "compression": [],
-    "date_time": "2024-10-15T12:33:31+0200",
+    "date_time": "2024-10-15T17:32:20+0200",
     "error": 0,
     "error_str": [],
     "exec_cmd": "generate",
     "exec_duration": 0.0,
-    "hash": "0xfc19bd00040282cf0a9574b786686fc4",
+    "hash": "0x0d869c09bb2e39e9f3c535a811cbf775",
     "inputs": [
-        "serving_default_dense_input0"
+        "serving_default_keras_tensor_40"
     ],
     "layers": [
         {
             "c_id": [
-                0,
-                1
+                0
             ],
             "extras": {
                 "n_macc": 0,
@@ -39,25 +38,52 @@
                         1
                     ]
                 },
-                "rom_size": 128
+                "rom_size": 0
             },
             "id": 0,
             "inputs": [],
-            "name": "serving_default_dense_input0",
+            "name": "serving_default_keras_tensor_40",
             "original": "",
             "type": "Input"
         },
         {
             "c_id": [],
             "extras": {
-                "n_macc": 0,
-                "n_params": 16,
-                "psize": 64,
+                "n_macc": 2,
+                "n_params": 0,
+                "psize": 0,
+                "rom_output": {
+                    "c_size": 1,
+                    "fmt": {
+                        "format": "s8"
+                    },
+                    "shape": [
+                        1
+                    ]
+                },
                 "rom_size": 0
             },
             "id": 0,
+            "inputs": [
+                "serving_default_keras_tensor_40"
+            ],
+            "name": "conversion_0",
+            "original": "QUANTIZE",
+            "type": "Conversion"
+        },
+        {
+            "c_id": [
+                1
+            ],
+            "extras": {
+                "n_macc": 0,
+                "n_params": 16,
+                "psize": 16,
+                "rom_size": 80
+            },
+            "id": 1,
             "inputs": [],
-            "name": "sequential_dense_MatMul",
+            "name": "tfl_pseudo_qconst5",
             "original": "",
             "type": "Placeholder"
         },
@@ -69,9 +95,9 @@
                 "psize": 64,
                 "rom_size": 0
             },
-            "id": 0,
+            "id": 1,
             "inputs": [],
-            "name": "sequential_dense_BiasAdd_ReadVariableOp",
+            "name": "tfl_pseudo_qconst4",
             "original": "",
             "type": "Placeholder"
         },
@@ -82,92 +108,9 @@
                 "n_params": 0,
                 "psize": 0,
                 "rom_output": {
-                    "c_size": 64,
+                    "c_size": 16,
                     "fmt": {
-                        "format": "float"
-                    },
-                    "shape": [
-                        16
-                    ]
-                },
-                "rom_size": 0
-            },
-            "id": 0,
-            "inputs": [
-                "serving_default_dense_input0",
-                "sequential_dense_MatMul",
-                "sequential_dense_BiasAdd_ReadVariableOp"
-            ],
-            "name": "gemm_0",
-            "original": "FULLY_CONNECTED",
-            "type": "Gemm"
-        },
-        {
-            "c_id": [],
-            "extras": {
-                "n_macc": 16,
-                "n_params": 0,
-                "psize": 0,
-                "rom_output": {
-                    "c_size": 64,
-                    "fmt": {
-                        "format": "float"
-                    },
-                    "shape": [
-                        16
-                    ]
-                },
-                "rom_size": 0
-            },
-            "id": 0,
-            "inputs": [
-                "gemm_0"
-            ],
-            "name": "nl_0_nl",
-            "original": "FULLY_CONNECTED",
-            "type": "Nonlinearity"
-        },
-        {
-            "c_id": [
-                2,
-                3
-            ],
-            "extras": {
-                "n_macc": 0,
-                "n_params": 256,
-                "psize": 1024,
-                "rom_size": 1088
-            },
-            "id": 1,
-            "inputs": [],
-            "name": "sequential_dense_1_MatMul",
-            "original": "",
-            "type": "Placeholder"
-        },
-        {
-            "c_id": [],
-            "extras": {
-                "n_macc": 0,
-                "n_params": 16,
-                "psize": 64,
-                "rom_size": 0
-            },
-            "id": 1,
-            "inputs": [],
-            "name": "sequential_dense_1_BiasAdd_ReadVariableOp",
-            "original": "",
-            "type": "Placeholder"
-        },
-        {
-            "c_id": [],
-            "extras": {
-                "n_macc": 272,
-                "n_params": 0,
-                "psize": 0,
-                "rom_output": {
-                    "c_size": 64,
-                    "fmt": {
-                        "format": "float"
+                        "format": "s8"
                     },
                     "shape": [
                         16
@@ -177,9 +120,9 @@
             },
             "id": 1,
             "inputs": [
-                "nl_0_nl",
-                "sequential_dense_1_MatMul",
-                "sequential_dense_1_BiasAdd_ReadVariableOp"
+                "conversion_0",
+                "tfl_pseudo_qconst5",
+                "tfl_pseudo_qconst4"
             ],
             "name": "gemm_1",
             "original": "FULLY_CONNECTED",
@@ -191,15 +134,6 @@
                 "n_macc": 16,
                 "n_params": 0,
                 "psize": 0,
-                "rom_output": {
-                    "c_size": 64,
-                    "fmt": {
-                        "format": "float"
-                    },
-                    "shape": [
-                        16
-                    ]
-                },
                 "rom_size": 0
             },
             "id": 1,
@@ -212,17 +146,90 @@
         },
         {
             "c_id": [
-                4
+                2
             ],
+            "extras": {
+                "n_macc": 0,
+                "n_params": 256,
+                "psize": 256,
+                "rom_size": 320
+            },
+            "id": 2,
+            "inputs": [],
+            "name": "tfl_pseudo_qconst3",
+            "original": "",
+            "type": "Placeholder"
+        },
+        {
+            "c_id": [],
             "extras": {
                 "n_macc": 0,
                 "n_params": 16,
                 "psize": 64,
-                "rom_size": 68
+                "rom_size": 0
             },
             "id": 2,
             "inputs": [],
-            "name": "sequential_dense_2_MatMul",
+            "name": "tfl_pseudo_qconst2",
+            "original": "",
+            "type": "Placeholder"
+        },
+        {
+            "c_id": [],
+            "extras": {
+                "n_macc": 272,
+                "n_params": 0,
+                "psize": 0,
+                "rom_output": {
+                    "c_size": 16,
+                    "fmt": {
+                        "format": "s8"
+                    },
+                    "shape": [
+                        16
+                    ]
+                },
+                "rom_size": 0
+            },
+            "id": 2,
+            "inputs": [
+                "nl_1_nl",
+                "tfl_pseudo_qconst3",
+                "tfl_pseudo_qconst2"
+            ],
+            "name": "gemm_2",
+            "original": "FULLY_CONNECTED",
+            "type": "Gemm"
+        },
+        {
+            "c_id": [],
+            "extras": {
+                "n_macc": 16,
+                "n_params": 0,
+                "psize": 0,
+                "rom_size": 0
+            },
+            "id": 2,
+            "inputs": [
+                "gemm_2"
+            ],
+            "name": "nl_2_nl",
+            "original": "FULLY_CONNECTED",
+            "type": "Nonlinearity"
+        },
+        {
+            "c_id": [
+                3
+            ],
+            "extras": {
+                "n_macc": 0,
+                "n_params": 16,
+                "psize": 16,
+                "rom_size": 20
+            },
+            "id": 3,
+            "inputs": [],
+            "name": "tfl_pseudo_qconst1",
             "original": "",
             "type": "Placeholder"
         },
@@ -234,9 +241,9 @@
                 "psize": 4,
                 "rom_size": 0
             },
-            "id": 2,
+            "id": 3,
             "inputs": [],
-            "name": "sequential_dense_2_BiasAdd_ReadVariableOp",
+            "name": "tfl_pseudo_qconst",
             "original": "",
             "type": "Placeholder"
         },
@@ -244,6 +251,35 @@
             "c_id": [],
             "extras": {
                 "n_macc": 17,
+                "n_params": 0,
+                "psize": 0,
+                "rom_output": {
+                    "c_size": 1,
+                    "fmt": {
+                        "format": "s8"
+                    },
+                    "shape": [
+                        1
+                    ]
+                },
+                "rom_size": 0
+            },
+            "id": 3,
+            "inputs": [
+                "nl_2_nl",
+                "tfl_pseudo_qconst1",
+                "tfl_pseudo_qconst"
+            ],
+            "name": "gemm_3",
+            "original": "FULLY_CONNECTED",
+            "type": "Gemm"
+        },
+        {
+            "c_id": [
+                4
+            ],
+            "extras": {
+                "n_macc": 2,
                 "n_params": 0,
                 "psize": 0,
                 "rom_output": {
@@ -257,33 +293,31 @@
                 },
                 "rom_size": 0
             },
-            "id": 2,
+            "id": 4,
             "inputs": [
-                "nl_1_nl",
-                "sequential_dense_2_MatMul",
-                "sequential_dense_2_BiasAdd_ReadVariableOp"
+                "gemm_3"
             ],
-            "name": "gemm_2",
-            "original": "FULLY_CONNECTED",
-            "type": "Gemm"
+            "name": "conversion_4",
+            "original": "DEQUANTIZE",
+            "type": "Conversion"
         }
     ],
     "model_files": [
-        "D:\\raulc\\MUICR\\TFM\\tflite-micro\\tensorflow\\lite\\micro\\examples\\hello_world\\models\\hello_world_float.tflite"
+        "D:\\raulc\\MUICR\\TFM\\tensorflow\\tensorflow\\lite\\experimental\\micro\\examples\\hello_world\\sine_model_quantized.tflite"
     ],
     "model_n_params": 321,
-    "model_name": "hello_world_float",
-    "model_size": 1284,
+    "model_name": "sine_model_quantized",
+    "model_size": 420,
     "model_type": "tflite",
     "name": "sine",
     "outputs": [
-        "gemm_2"
+        "conversion_4"
     ],
     "ram_io_size": [
         0,
         0
     ],
-    "ram_size": 128,
+    "ram_size": 224,
     "report_version": 1.1,
     "rom_cfact": 1.0,
     "rom_heap_inspector": 2048,
@@ -291,18 +325,18 @@
         {
             "c_size": 4,
             "c_type": "float",
-            "name": "serving_default_dense_input0"
+            "name": "serving_default_keras_tensor_40"
         }
     ],
-    "rom_n_macc": 353,
+    "rom_n_macc": 325,
     "rom_outputs": [
         {
             "c_size": 4,
             "c_type": "float",
-            "name": "gemm_2"
+            "name": "conversion_4"
         }
     ],
-    "rom_size": 1284,
+    "rom_size": 420,
     "strategy": "",
     "tools_api_version": "1.0.0-19894",
     "tools_version": "1.0.0-19894",
