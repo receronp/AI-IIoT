@@ -19,19 +19,8 @@
 
  /*
   * Description
-  *   v1.0 - Minimum template to show how to use the Embedded Client API
-  *          model. Only one input and one output is supported. All
-  *          memory resources are allocated statically (AI_NETWORK_XX, defines
-  *          are used).
-  *          Re-target of the printf function is out-of-scope.
-  *   v2.0 - add multiple IO and/or multiple heap support
+  *   v1.0 - Basic template to show how to use the TensorFlow lite micro API
   *
-  *   For more information, see the embeded documentation:
-  *
-  *       [1] %X_CUBE_AI_DIR%/Documentation/index.html
-  *
-  *   X_CUBE_AI_DIR indicates the location where the X-CUBE-AI pack is installed
-  *   typical : C:\Users\<user_name>\STM32Cube\Repository\STMicroelectronics\X-CUBE-AI\7.1.0
   */
 
 #ifdef __cplusplus
@@ -39,10 +28,6 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-
-#if defined ( __ICCARM__ )
-#elif defined ( __CC_ARM ) || ( __GNUC__ )
-#endif
 
 /* System headers */
 #include <stdint.h>
@@ -53,173 +38,225 @@
 
 #include "app_x-cube-ai.h"
 #include "main.h"
-#include "ai_datatypes_defines.h"
-#include "sine.h"
-#include "sine_data.h"
 
 /* USER CODE BEGIN includes */
-#include "usart.h"
-#include <math.h>
 /* USER CODE END includes */
 
-/* IO buffers ----------------------------------------------------------------*/
+#include <tflm_c.h>
+/* Global handle - used to reference the instantiated model */
+static uint32_t model_hdl = 0;
 
-#if !defined(AI_SINE_INPUTS_IN_ACTIVATIONS)
-AI_ALIGNED(4) ai_i8 data_in_1[AI_SINE_IN_1_SIZE_BYTES];
-ai_i8* data_ins[AI_SINE_IN_NUM] = {
-data_in_1
-};
-#else
-ai_i8* data_ins[AI_SINE_IN_NUM] = {
-NULL
-};
-#endif
-
-#if !defined(AI_SINE_OUTPUTS_IN_ACTIVATIONS)
-AI_ALIGNED(4) ai_i8 data_out_1[AI_SINE_OUT_1_SIZE_BYTES];
-ai_i8* data_outs[AI_SINE_OUT_NUM] = {
-data_out_1
-};
-#else
-ai_i8* data_outs[AI_SINE_OUT_NUM] = {
-NULL
-};
-#endif
-
-/* Activations buffers -------------------------------------------------------*/
-
-AI_ALIGNED(32)
-static uint8_t pool0[AI_SINE_DATA_ACTIVATION_1_SIZE];
-
-ai_handle data_activations0[] = {pool0};
-
-/* AI objects ----------------------------------------------------------------*/
-
-static ai_handle sine = AI_HANDLE_NULL;
-
-static ai_buffer* ai_input;
-static ai_buffer* ai_output;
-
-static void ai_log_err(const ai_error err, const char *fct)
+/* tflm_io_write() is the final callback implementation to implement the DebugLog() function
+ * requested by the tflite::MicroErrorReporter object
+ */
+int tflm_io_write(const void *buff, uint16_t count)
 {
-  /* USER CODE BEGIN log */
-  uint8_t MSG[100] = {'\0'};
 
-  if (fct)
-    sprintf((char *)MSG, "TEMPLATE - Error (%s) - type=0x%02x code=0x%02x\r\n",
-            fct, err.type, err.code);
-  else
-    sprintf((char *)MSG, "TEMPLATE - Error - type=0x%02x code=0x%02x\r\n",
-            err.type, err.code);
-
-  HAL_UART_Transmit(&huart1, MSG, sizeof(MSG), 100);
-
-  do {} while (1);
-  /* USER CODE END log */
+    /*
+     * add here where to send the log messages
+     * for example
+     *   HAL_StatusTypeDef status;
+     *   status = HAL_UART_Transmit(&UartHandle, (uint8_t *)buff, count,
+     *       HAL_MAX_DELAY);
+     *
+     * return (status == HAL_OK ? count : 0);
+     */
+     return((int)count);
 }
 
-static int ai_boostrap(ai_handle *act_addr)
+static int ai_boostrap(const uint8_t *model, uint8_t *arena_addr,
+    size_t arena_sz)
 {
-  ai_error err;
+  TfLiteStatus res;
+  int32_t size_io;
 
-  /* Create and initialize an instance of the model */
-  err = ai_sine_create_and_init(&sine, act_addr, NULL);
-  if (err.type != AI_ERROR_NONE) {
-    ai_log_err(err, "ai_sine_create_and_init");
+  /* USER CODE BEGIN 1 */
+  printf("\r\nInstancing the network (TFLM)..\r\n");
+  /* USER CODE END 1 */
+
+  res = tflm_c_create(model, (uint8_t*)arena_addr, arena_sz, &model_hdl);
+
+  if (res != kTfLiteOk) {
     return -1;
   }
 
-  ai_input = ai_sine_inputs_get(sine, NULL);
-  ai_output = ai_sine_outputs_get(sine, NULL);
+  /* USER CODE BEGIN 2 */
 
-#if defined(AI_SINE_INPUTS_IN_ACTIVATIONS)
-  /*  In the case where "--allocate-inputs" option is used, memory buffer can be
-   *  used from the activations buffer. This is not mandatory.
+  /* Report the main model info */
+
+  printf(" Operator size      : %d\r\n", (int)tflm_c_operators_size(model_hdl));
+  printf(" Tensor size        : %d\r\n", (int)tflm_c_tensors_size(model_hdl));
+
+  /* Report the size of arena buffer which is really used during the set-up and run phases
+   * - based on a debug service (see C++ interpreter i/f in tflm_c.cc file)
+   * - after this step, no additional memory should be allocated from the arena buffer or
+   *   through another system heap allocator.
+   * Note: This info is useful to refine/adjust the requested size of the arena buffer.
    */
-  for (int idx=0; idx < AI_SINE_IN_NUM; idx++) {
-	data_ins[idx] = ai_input[idx].data;
+  printf(" Allocated size     : %d / %d\r\n", (int)tflm_c_arena_used_bytes(model_hdl),
+      (int)arena_sz);
+
+  /* Report the description of the IO tensors */
+
+  size_io = tflm_c_inputs_size(model_hdl);
+  printf(" Inputs size        : %d\r\n", (int)size_io);
+
+  for (int i=0; i<size_io; i++) {
+    struct tflm_c_tensor_info t_info;
+    tflm_c_input(model_hdl, i, &t_info);
+    printf("  %d: %s (%d bytes) (%d, %d, %d)", i, tflm_c_TfLiteTypeGetName(t_info.type),
+        (int)t_info.bytes, (int)t_info.height, (int)t_info.width, (int)t_info.channels);
+    if (t_info.scale)
+      printf(" scale=%f, zp=%d\r\n", (float)t_info.scale, (int)t_info.zero_point);
+    else
+      printf("\r\n");
   }
+
+  size_io = tflm_c_outputs_size(model_hdl);
+  printf(" Outputs size       : %d\r\n", (int)size_io);
+
+  for (int i=0; i<size_io; i++) {
+    struct tflm_c_tensor_info t_info;
+    tflm_c_output(model_hdl, i, &t_info);
+    printf("  %d: %s (%d bytes) (%d, %d, %d)", i, tflm_c_TfLiteTypeGetName(t_info.type),
+        (int)t_info.bytes, (int)t_info.height, (int)t_info.width, (int)t_info.channels);
+    if (t_info.scale)
+      printf(" scale=%f, zp=%d\r\n", (float)t_info.scale, (int)t_info.zero_point);
+    else
+      printf("\r\n");
+  }
+
+  if ((tflm_c_inputs_size(model_hdl) != 1) || (tflm_c_inputs_size(model_hdl) != 1)) {
+    printf("WARNING - embedded TFL model is not compitable with the default template..\r\n");
+  }
+
+  /* USER CODE END 2 */
+
+  return 0;
+}
+
+/* USER CODE BEGIN 3 */
+int acquire_and_process_data(void* data)
+{
+	printf("Fill the inputs..\r\n");
+	return 0;
+}
+
+int post_process(void * data)
+{
+	printf("Process the outputs..\r\n");
+	return 0;
+}
+/* USER CODE END 3 */
+
+/* USER CODE BEGIN 4 */
+
+/*
+ * The following code is based on the generated/specific
+ * network_tflite_data.h/.c files. These files embed a full
+ * image of the TFLite file as a C-array
+ * (g_tflm_network_model_data[]).
+ *
+ * Note: Thanks to X-CUBE-AI, a pre-calculated ARENA size is
+ *       also provided (TFLM_NETWORK_TENSOR_AREA_SIZE).
+ *       With the default TFLight micro environment, no
+ *       service is available to report it. Recommended approach
+ *       is to provide an initial size (roughly estimated by the user)
+ *       and to adjust it during the integration phase. Real value
+ *       can be only known after the call of the
+ *       interpreter::AllocateTensors() function at runtime.
+ */
+
+#include "network_tflite_data.h"
+
+#define BIN_ADDRESS &g_tflm_network_model_data[0]
+#define ARENA_SIZE  TFLM_NETWORK_TENSOR_AREA_SIZE
+
+/* Allocate the arena buffer to install the model
+ *  - Size should be aligned on 16-bytes.
+ *   Note: This is not really strict, but avoid to have a
+ *         specific warning/debug message during the
+ *         set-up phase. At the end, memory will be aligned by
+ *          the TFLight micro runtime it-self.
+ */
+
+#define _CONCAT_ARG(a, b)     a ## b
+#define _CONCAT(a, b)         _CONCAT_ARG(a, b)
+
+#if defined(_MSC_VER)
+  #define MEM_ALIGNED(x)
+#elif defined(__ICCARM__) || defined (__IAR_SYSTEMS_ICC__)
+  #define MEM_ALIGNED(x)         _CONCAT(MEM_ALIGNED_,x)
+  #define MEM_ALIGNED_16         _Pragma("data_alignment = 16")
+#elif defined(__CC_ARM)
+  #define MEM_ALIGNED(x)         __attribute__((aligned (x)))
+#elif defined(__GNUC__)
+  #define MEM_ALIGNED(x)         __attribute__((aligned(x)))
 #else
-  for (int idx=0; idx < AI_SINE_IN_NUM; idx++) {
-	  ai_input[idx].data = data_ins[idx];
-  }
+  #define MEM_ALIGNED(x)
 #endif
 
-#if defined(AI_SINE_OUTPUTS_IN_ACTIVATIONS)
-  /*  In the case where "--allocate-outputs" option is used, memory buffer can be
-   *  used from the activations buffer. This is no mandatory.
-   */
-  for (int idx=0; idx < AI_SINE_OUT_NUM; idx++) {
-	data_outs[idx] = ai_output[idx].data;
-  }
-#else
-  for (int idx=0; idx < AI_SINE_OUT_NUM; idx++) {
-	ai_output[idx].data = data_outs[idx];
-  }
-#endif
-
-  return 0;
-}
-
-static int ai_run(void)
-{
-  ai_i32 batch;
-
-  batch = ai_sine_run(sine, ai_input, ai_output);
-  if (batch != 1) {
-    ai_log_err(ai_sine_get_error(sine),
-        "ai_sine_run");
-    return -1;
-  }
-
-  return 0;
-}
-
-/* USER CODE BEGIN 2 */
-int acquire_and_process_data(ai_i8* data[])
-{
-  uint8_t MSG[15] = {'\0'};
-  static ai_i8 counter = 0;
-  const ai_float DIVISIONS = 20;
-
-  // fill the input of the c-model
-  ((ai_float *)(data[0]))[0] = (ai_float)counter++ * (M_PI / DIVISIONS);
-  sprintf((char *)MSG, "X:%.6f,", ((ai_float *)(data[0]))[0]);
-  HAL_UART_Transmit(&huart1, MSG, sizeof(MSG), 100);
-
-  if (counter == (2 * DIVISIONS))
-    counter = 0;
-  return 0;
-}
-
-int post_process(ai_i8* data[])
-{
-  // process the predictions
-  uint8_t MSG[15] = {'\0'};
-  sprintf((char *)MSG, "Y:%.6f\r\n", ((ai_float *)(data[0]))[0]);
-  HAL_UART_Transmit(&huart1, MSG, sizeof(MSG), 100);
-
-  return 0;
-}
-/* USER CODE END 2 */
+MEM_ALIGNED(16)
+static uint8_t tensor_arena[TFLM_NETWORK_TENSOR_AREA_SIZE];
+/* USER CODE END 4 */
 
 /* Entry points --------------------------------------------------------------*/
 
 void MX_X_CUBE_AI_Init(void)
 {
     /* USER CODE BEGIN 5 */
-    ai_boostrap(data_activations0);
+  int res;
+
+  printf("\r\nTEMPLATE - initialization\r\n");
+
+  res = ai_boostrap(BIN_ADDRESS, tensor_arena, ARENA_SIZE);
+  if (res) {
+    printf("E: unable to instantiate the embedded image of the TFLite model/file..\n\r");
+    return;
+  }
     /* USER CODE END 5 */
 }
 
 void MX_X_CUBE_AI_Process(void)
 {
     /* USER CODE BEGIN 6 */
-    uint8_t res = acquire_and_process_data(data_ins);
-    if (res == 0)
-      res = ai_run();
-    if (res == 0)
-      post_process(data_outs);
+      volatile int res = -1;
+
+  uint8_t *in_data = NULL;
+  uint8_t *out_data = NULL;
+
+  printf("TEMPLATE TFLM - run - main loop\r\n");
+
+  if (model_hdl) {
+
+    /* 1 - Retrieve the addresses of the IO buffers (index=0) */
+    struct tflm_c_tensor_info info;
+
+    tflm_c_input(model_hdl, 0, &info);
+    in_data = (uint8_t *)info.data;
+
+    tflm_c_output(model_hdl, 0, &info);
+    out_data = (uint8_t *)info.data;
+
+    /* 2 - main loop */
+    do {
+      /* 1 - acquire and pre-process input data */
+      res = acquire_and_process_data(in_data);
+      /* 2 - process the data - call inference engine */
+      if (res == 0) {
+        if (tflm_c_invoke(model_hdl) != kTfLiteOk) {
+          res = -1;
+        }
+      }
+      /* 3- post-process the predictions */
+      if (res == 0)
+        res = post_process(out_data);
+    } while (res==0);
+  }
+
+  if (res) {
+    printf("E: unable to use the TFLite model..\n\r");
+  }
     /* USER CODE END 6 */
 }
 #ifdef __cplusplus
