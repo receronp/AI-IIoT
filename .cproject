@@ -143,6 +143,7 @@
 									<listOptionValue builtIn="false" value="../Middlewares/tensorflow/third_party/gemmlowp"/>
 									<listOptionValue builtIn="false" value="../Middlewares/tensorflow/third_party/cmsis/CMSIS/Core"/>
 									<listOptionValue builtIn="false" value="../Middlewares/tensorflow/third_party/ruy"/>
+									<listOptionValue builtIn="false" value="../Middlewares/tensorflow/third_party/kissfft"/>
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32L4xx/Include "/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.410284964" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
